@@ -1,0 +1,77 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\para{Reading the hypothesis against the results.}
+The log-linear intuition is right about loss, and it is what scaling laws predict: at a fixed budget a domain's share is its data quantity, and loss falls roughly linearly in log data.
+The hypothesis goes wrong in two places.
+The first is the step from loss to downstream performance.
+The second is the idea of a saturation point.
+Loss never saturates inside the simplex, and downstream accuracy in this regime is insensitive to share across the whole interior.
+It moves only when a domain nearly fills the corpus.
+
+\para{Why might downstream scores be flat?}
+We see three explanations, which this experiment cannot fully separate.
+First, the benefit may arrive very early.
+If the first 2\% of a domain carries half of its value, as it does for loss, then every interior mixture already has enough of everything.
+The sweeps are consistent with downstream saturation well below 20\%.
+However, the models with a domain absent ($p = 0$) also show no drop on the downstream tasks, even though removing a domain raises its loss by 0.9--4.0 nats relative to uniform, which argues against even this reading.
+Second, the probes may measure general language-model quality, which all mixtures with a majority of natural language share.
+Pure code, the only mixture with no natural language, is the one clear outlier.
+Third, the instruments have low sensitivity.
+Zero-shot accuracy is 2--3 points above chance, and \proofwriter has a seed SD of 2.6 points with occasional large jumps: three runs score 68--71\% against a typical 56--60\%.
+Effects under about 1 point on knowledge or 2--3 points on reasoning would be invisible with one to three seeds.
+
+\para{Relation to prior work.}
+Our loss results agree with \citet{ye2025datamixing} and \citet{shukor2025scaling}: loss is a smooth, predictable function of the mixture.
+A plain log-share form is competitive with the exponential form here and extrapolates better to very small shares.
+The direction of the code effect in \citet{aryabumi2025code} appears only as a small \listops association.
+Their gains were measured on models 30--160 times larger and on natural-language reasoning benchmarks that our models cannot attempt zero-shot, so our result does not contradict theirs.
+RegMix's observation that web text is not harmful \citep{liu2025regmix} is consistent with our web sweep.
+Wikipedia, not web or code, is the most useful single source for our knowledge probes, and it is the only domain whose pure corpus beats the uniform mixture on both knowledge measures.
+
+\para{Failure modes of the instruments.}
+The randomly initialized controls are high.
+Fine-tuned \sciq reaches 37.6\% with no pre-training against a chance level of 25\%, so about 12 points come from answer-string priors that can be learned from the \sciq training answers.
+\proofwriter reaches 55.9\% against a chance level of 33\%, leaving only about 4 points that pre-training can explain.
+ARC-Challenge is below chance (20.0\% mean vs.\ 25\%) for every pre-trained model, as expected for a set filtered against co-occurrence baselines.
+
+\para{Arithmetic is bimodal.}
+After 1{,}500 fine-tuning steps a model either learns 3-digit addition and subtraction (60\% of runs score above 85\%) or largely fails (20\% score below 50\%).
+The three uniform seeds score 8\%, 19\%, and 97\%, and the randomly initialized control scores 76\%, so pre-training often hurts this probe.
+With a seed SD of 23 points we can draw no conclusion about mixtures.
+Code share correlates negatively with arithmetic ($r = -0.39$ across mixtures); we treat this as a hypothesis only.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\para{Scale.}
+17M parameters and 60M tokens are four to five orders of magnitude below production pre-training.
+Reasoning benchmarks and knowledge-intensive tasks in the usual sense are out of reach.
+Our reasoning measure is fine-tuning transfer to \listops and \proofwriter, which is a different construct from zero-shot reasoning.
+The downstream conclusions should not be extrapolated to large models.
+
+\para{Sensitivity and seeds.}
+The downstream nulls bound effects at roughly 1--3 points; they do not show that the effects are zero.
+We have three seeds at 14 mixtures and one seed elsewhere.
+Welch tests with 3 vs.\ 3 seeds have little power, the uniform seeds are reused in every contrast, and we examined about ninety contrasts without a global correction.
+Only the very large effects, such as pure code on knowledge, are safe.
+
+\para{Data-dependent choices.}
+We fixed the composites from the uniform pilot and the randomly initialized control before comparing mixtures, but this is still a data-dependent choice; we report individual tasks so that readers can recompute any composite.
+We chose to fit simplex laws on interior mixtures only after seeing that $p = 0$ is a cliff.
+We reduced the model and budget from the planned 34M parameters and 100M tokens because the GPUs were shared, and we added 18 replicate runs part-way (Appendix~\ref{app:details}).
+
+\para{Confounds.}
+Raising one share lowers the others, and the sweeps hold the ratio of the others fixed, not their amounts.
+At a fixed budget, share and absolute token count are the same variable, so we cannot tell a log law in share from a log law in data quantity.
+
+\para{Coverage.}
+We use one corpus per domain, one architecture, one budget, and one tokenizer.
+``Code'' is Python only and ``web'' is one C4 shard.
+Our literature review is at the level of abstracts.
+
+\subsection{Broader implications}
+
+For practitioners working at small scale, the result is useful in one direction: a mixture can be tuned for loss with a log-share law fitted on about thirty small runs.
+It is a warning in the other direction: loss differences of this kind did not turn into measurable downstream differences unless a domain was pushed to 75\% or more.
+Loss-level mixing laws are therefore not, on their own, evidence about task performance.

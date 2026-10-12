@@ -1,0 +1,109 @@
+\section{Methodology}
+\label{sec:method}
+
+\subsection{Problem formulation}
+
+Let $\vp = (p_{\text{web}}, p_{\text{wiki}}, p_{\text{code}}, p_{\text{arxiv}})$ be a mixture on the simplex, where $p_d$ is the fraction of training tokens drawn from domain $d$.
+We fix the architecture, tokenizer, token budget, optimizer, and schedule, and train one model per mixture.
+We then ask how a score $y(\vp)$, either held-out loss on a domain or accuracy on a downstream task, depends on $\vp$.
+
+\para{Curve shapes along a sweep.}
+For a single-domain sweep we compare four forms for $y$ as a function of the swept share $p$:
+\begin{align}
+\text{linear:} \quad & y = a + b\,p, \\
+\text{log:} \quad & y = a + b \log p, \label{eq:log} \\
+\text{exponential:} \quad & y = c + k\,e^{t p}, \\
+\text{log with plateau:} \quad & y = a + b \log \min(p, p^{\star}).
+\end{align}
+The exponential form is the one-dimensional version of the law of \citet{ye2025datamixing}, and $p^{\star}$ is a fitted saturation point.
+H1 says that the log form beats the linear form.
+H2 says that $p^{\star} \approx 0.2$.
+
+\para{Laws over the whole simplex.}
+To predict unseen mixtures we compare a linear (Scheff\'e) mixture model $y = \sum_j \beta_j p_j$, the log law in the domain's own share (\eqref{eq:log}), the multi-domain exponential law $y = c + k \exp(\sum_j t_j p_j)$ of \citet{ye2025datamixing}, and an additive log-share law
+\begin{equation}
+L_d(\vp) = a_d + \sum_{j} b_{dj} \log p_j ,
+\label{eq:additive}
+\end{equation}
+where $L_d$ is held-out loss on domain $d$.
+The coefficients $b_{dj}$ form a transfer matrix: $b_{dj}$ is the change in loss on domain $d$ per $e$-fold increase in the share of domain $j$.
+
+\subsection{Pre-training}
+
+\para{Domains.}
+We use four domains: \web is English C4 \citep{raffel2020t5}; \wiki is WikiText-103 \citep{merity2017wikitext}; \code is the Python corpus \texttt{codeparrot-clean}; \arxiv is the article bodies of the arXiv summarization dataset \citep{cohan2018discourse}.
+We equalize the pools at 128.9M training tokens per domain and hold out separate documents for evaluation.
+One byte-level BPE tokenizer with 16{,}384 tokens, trained on a balanced sample, is shared by all runs.
+
+\para{Model and budget.}
+Every model is a decoder-only transformer with 6 layers, width 384, 6 heads, context length 256, and tied embeddings, for 17.0M parameters.
+Every run sees exactly 60M tokens (3{,}662 steps of 64 sequences of 256 tokens).
+We train with AdamW \citep{loshchilov2019adamw} at learning rate $10^{-3}$, 3\% warm-up, cosine decay to 10\% of the peak, weight decay 0.1, $\beta = (0.9, 0.95)$, gradient clipping at 1.0, and bfloat16 autocast.
+Each training sequence is drawn from domain $d$ with probability $p_d$.
+We chose this size because the GPUs were shared with other jobs; \secref{sec:limitations} and Appendix~\ref{app:details} describe this and other deviations from the original plan.
+
+\subsection{Mixture design}
+
+We train 81 runs on 53 distinct mixtures (\tabref{tab:design}).
+
+\begin{table}[t]
+\centering
+\caption{Mixture design. The uniform mixture lies on all four sweeps. Seed replicates use three seeds each and give 28 degrees of freedom for the noise estimate.}
+\label{tab:design}
+\small
+\begin{tabular}{@{}p{0.17\textwidth}p{0.45\textwidth}p{0.31\textwidth}@{}}
+\toprule
+Component & Mixtures & Purpose \\
+\midrule
+Single-domain sweeps & share $p \in \{0, 0.02, 0.05, 0.1, 0.2,$ $0.35, 0.5, 0.75, 1\}$ per domain; the other three split $1-p$ equally & curve shape, saturation, web threshold (H1, H2, H4) \\
+Random mixtures & 16 draws from $\mathrm{Dirichlet}(1,1,1,1)$ & unbiased correlations (H3); held-out test set for laws \\
+Seed replicates & uniform; every $p{=}0$ and $p{=}1$ model; \web at 0.2, 0.5, 0.75; \code at 0.2, 0.5 (14 mixtures) & noise floor \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\para{Why three components?}
+The sweeps are the only way to see the shape of a curve and to locate a saturation point.
+But shares on a simplex are negatively correlated with one another, and a sweep confounds a domain's effect with the sweep structure, so we use Dirichlet draws for correlations.
+Without seed replicates, no claim about curve shape or degradation is interpretable.
+
+\subsection{Evaluation}
+
+\para{Loss.}
+We compute held-out loss in nats per token on each domain over non-overlapping windows (0.27--1.0M tokens per domain).
+
+\para{Knowledge, zero-shot ($\Kzs$).}
+We score multiple-choice questions by choosing the answer with the highest length-normalized log-likelihood after the prompt ``\texttt{Question:\,\ldots\textbackslash nAnswer:}''.
+$\Kzs$ is the mean accuracy on \sciq \citep{welbl2017sciq} (13{,}679 items) and \arceasy \citep{clark2018arc} (5{,}197 items).
+We also report ARC-Challenge, OpenBookQA \citep{mihaylov2018openbookqa}, and CommonsenseQA \citep{talmor2019commonsenseqa} but exclude them from the composite.
+
+\para{Knowledge, fine-tuned ($\Kft$).}
+We fine-tune each checkpoint for 400 steps on \sciq training answers without the supporting passage, then score multiple choice on the 2{,}000 validation and test items.
+
+\para{Reasoning ($\Rc$).}
+Models of this size cannot reason zero-shot, so we measure fine-tuning transfer.
+$\Rc$ is the mean exact-match accuracy on \listops \citep{nangia2018listops} (generated; 4{,}000 training and 2{,}000 test examples) and \proofwriter \citep{tafjord2021proofwriter} (3{,}000 training and 1{,}500 test examples), each after 500 fine-tuning steps.
+We also report 3-digit arithmetic after 1{,}500 steps, outside the composite.
+
+Fine-tuning uses learning rate $3 \times 10^{-4}$, loss on answer tokens only, and the same data order for every checkpoint.
+Re-running the evaluation of a checkpoint reproduces every number exactly.
+
+\para{How we chose the composites.}
+We fixed task inclusion using only the uniform-mixture pilot and a randomly initialized control, before any mixture comparison.
+$\Kzs$ keeps the two zero-shot tasks that were above chance.
+$\Kft$ is the fallback we planned in case zero-shot signal was weak.
+$\Rc$ keeps the two fine-tuned tasks on which pre-training helped.
+We exclude arithmetic because pre-training hurt it in the pilot.
+
+\subsection{Baselines and statistical analysis}
+
+\para{Baselines.}
+We compare against the uniform mixture, pure-domain models ($p = 1$), leave-one-domain-out models ($p = 0$), a randomly initialized model for all fine-tuned probes, and chance for multiple choice.
+For curve shape the linear fit is the null.
+
+\para{Tests.}
+For curve shape we use leave-one-out (LOO) RMSE as the primary criterion and AICc as a check, fitting on the nine shares above zero.
+For correlations we report Pearson $r$ with bootstrap 95\% confidence intervals and a Holm correction across the four domains.
+For degradation we use Welch $t$-tests across seeds.
+The noise floor is the pooled standard deviation across seeds at the 14 replicated mixtures.
+We fit simplex laws on the 29 structured mixtures in which every share is positive and test on the 16 random mixtures.

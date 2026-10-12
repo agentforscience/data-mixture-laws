@@ -1,0 +1,28 @@
+\section{Related Work}
+\label{sec:related}
+
+\para{Mixing laws for loss.}
+\citet{ye2025datamixing} propose data mixing laws: validation loss is a predictable function of the mixture proportions, exponential in the proportions, which can be fitted on a few sampled mixtures and nested with step and model-size scaling laws to choose a mixture for a larger model.
+\citet{shukor2025scaling} extend scaling laws to predict loss as a joint function of model size, token count, and domain weights.
+Both target validation loss.
+We use the same kind of small-run fitting, but we ask whether downstream accuracy follows similar shapes, and we compare the exponential form against a log-share form on held-out mixtures.
+
+\para{Choosing mixtures with proxy models.}
+RegMix \citep{liu2025regmix} trains many tiny models on random mixtures, fits a regression from mixture to a target loss, and transfers the best mixture to larger models.
+It reports that web corpora, and not sources usually seen as higher quality such as Wikipedia, correlate most positively with downstream performance.
+DoReMi \citep{xie2023doremi} and DoGE \citep{fan2024doge} learn domain weights with a proxy model.
+These methods search for a good mixture.
+Unlike them, we do not optimize a mixture; we characterize the shape of the dose--response curve along each domain and test a specific threshold for web text.
+RegMix's finding on web text runs against the claim that heavy web text is harmful, which makes H4 a real test.
+
+\para{Code in pre-training.}
+\citet{aryabumi2025code} run ablations on models with 470M to 2.8B parameters and report relative gains of up to 8.2\% on natural-language reasoning and 4.2\% on world knowledge when code is added to text-only pre-training.
+This result motivates H3.
+It uses a few mixtures, so it does not show how the benefit changes with the amount of code.
+We sweep code share over nine levels and measure its correlation with reasoning probes on random mixtures.
+
+\para{Scaling laws and small-model evaluation.}
+Scaling laws describe loss as a power law in data and parameters \citep{kaplan2020scaling,hoffmann2022chinchilla}.
+At a fixed budget a domain's share is its data quantity, so a logarithmic dependence of in-domain loss on share is the natural prior for H1.
+Work on small language models, such as the BabyLM challenge \citep{warstadt2023babylm}, evaluates mostly with likelihood-based and fine-tuning protocols because zero-shot benchmark accuracy is near chance at that scale.
+We follow this practice and measure reasoning by fine-tuning transfer.

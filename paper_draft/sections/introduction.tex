@@ -1,0 +1,47 @@
+\section{Introduction}
+\label{sec:intro}
+
+How much web text, code, encyclopedic text, and scientific writing should a pre-training corpus contain?
+This choice is one of the few levers that changes what a language model can do at a fixed compute budget, yet practitioners mostly set it by heuristics.
+A simple, predictable law linking domain proportions to performance would let us choose a mixture from a handful of small runs instead of trial and error at scale.
+
+Recent work shows that such laws exist for validation loss.
+\citet{ye2025datamixing} fit an exponential function of the mixture proportions to validation loss, and \citet{shukor2025scaling} extend scaling laws to include domain weights.
+RegMix \citep{liu2025regmix} regresses a loss target on random mixtures and reports that web text correlates best with downstream performance, while \citet{aryabumi2025code} show that adding code to pre-training helps reasoning tasks.
+
+However, these studies leave the \emph{shape} of the relationship between a domain's share and downstream performance open.
+Loss-level laws do not tell us whether task accuracy follows the same curve, and the code result rests on a handful of mixtures, not on a dose--response curve.
+Folk beliefs about mixtures are also more specific than what has been tested: that returns from a domain diminish quickly, that code drives reasoning, and that too much web text dilutes knowledge.
+
+\para{Our main question is whether these beliefs survive a controlled test.}
+We turn them into four claims.
+(H1) Performance is log-linear in a domain's share.
+(H2) Returns saturate at about 20\% for any single domain.
+(H3) Code share is the strongest positive correlate of reasoning scores, with $r > 0.7$.
+(H4) Web text above 50\% degrades knowledge-intensive tasks.
+
+We test these claims with a dose--response study.
+We train 81 GPT models with 17M parameters from scratch, each on 60M tokens drawn from a controlled mixture of four domains: web text, Wikipedia, Python code, and arXiv papers.
+The design has three parts (\secref{sec:method}): single-domain sweeps that vary one share from 0 to 1, 16 random mixtures that give an unbiased sample for correlations and a held-out test set for mixture laws, and three seeds at 14 mixtures that give a noise floor.
+We evaluate every model on held-out loss per domain, on zero-shot and fine-tuned knowledge question answering, and on fine-tuned reasoning probes.
+
+The hypothesis holds for loss and essentially nowhere else.
+In-domain loss is log-linear in the domain's share: the log law has 2.3 to 22 times lower leave-one-out error than a linear law, with $R^2$ between 0.98 and 0.9996.
+But there is no saturation at 20\%; loss falls a further 0.36--0.55 nats from 20\% to 100\%, which is 59--98 seed standard deviations.
+Downstream accuracy is almost flat.
+Code share correlates with the reasoning composite at $r = -0.10$ on the random mixtures (95\% CI $[-0.55, 0.57]$), and 75\% web text is indistinguishable from 25\% or 50\% on both knowledge measures.
+The largest downstream effect is in the opposite direction from H3: a pure-code corpus loses 7.4 points of fine-tuned \sciq accuracy.
+
+These results come with a clear boundary.
+Our models are four to five orders of magnitude smaller than production language models, and their zero-shot accuracy is 2--3 points above chance.
+The downstream nulls therefore show that the effects are small relative to our noise at this scale, not that they are absent at large scale.
+
+In summary, our contributions are:
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item We design a dose--response study of pre-training mixtures with 81 models on 53 mixtures, combining single-domain sweeps, random mixtures, and seed replicates so that each claim has a test and a noise estimate.
+    \item We show that in-domain loss follows a log-share law with no saturation at 20\%, and that the first 2\% of a domain delivers 43--67\% of its total loss benefit.
+    \item We show that a log-share law fitted on 29 mixtures predicts loss on 16 unseen mixtures with correlation 0.94--0.9996, and we compare it with the exponential law of \citet{ye2025datamixing}.
+    \item We find that downstream accuracy does not follow the hypothesized laws at this scale: it is flat within seed noise across interior mixtures, and neither the code--reasoning claim nor the web--knowledge claim is supported.
+\end{itemize}
+
+We review related work in \secref{sec:related}, describe the setup in \secref{sec:method}, report results in \secref{sec:results}, and discuss interpretation and limitations in \secref{sec:discussion}.

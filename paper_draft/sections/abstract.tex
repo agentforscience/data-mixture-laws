@@ -1,0 +1,10 @@
+The composition of a pre-training corpus is chosen mostly by heuristics.
+Prior data mixing laws predict validation loss from domain proportions, but they do not tell us whether downstream accuracy follows the same shape.
+We test a concrete hypothesis: at a fixed model size and token budget, performance is log-linear in each domain's share and saturates near 20\%, code is the strongest driver of reasoning scores ($r > 0.7$), and more than 50\% web text hurts knowledge tasks.
+We train 81 small GPT models (17M parameters, 60M tokens each) from scratch on 53 controlled mixtures of web text, Wikipedia, code, and scientific papers, with seed replicates at 14 mixtures.
+The hypothesis holds for language-modeling loss and essentially nowhere else.
+Held-out loss on a domain is log-linear in that domain's share ($R^2$ of 0.98--0.9996, against 0.67--0.87 for a linear fit), but it does not saturate at 20\%: loss keeps falling by 0.36--0.55 nats between 20\% and 100\%.
+Downstream accuracy is nearly flat across mixtures, with most differences inside seed noise.
+Code share does not correlate with our reasoning composite ($r = -0.10$ on 16 random mixtures), and 75\% web text is indistinguishable from 25--50\% on knowledge probes.
+The one robust downstream effect is that a pure-code corpus costs 7.4 points of fine-tuned question-answering accuracy.
+At this scale, a log-share law fitted on about thirty runs predicts loss on unseen mixtures, but these loss differences do not turn into measurable downstream differences.

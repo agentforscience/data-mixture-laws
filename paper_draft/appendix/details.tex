@@ -1,0 +1,19 @@
+\section{Implementation details and deviations from the plan}
+\label{app:details}
+
+\para{Compute.}
+We used four NVIDIA RTX A6000 GPUs (48 GB), shared with three other concurrent jobs for most of the session.
+Pre-training took 11.4 GPU-hours and evaluation 3.8 GPU-hours, with 4--21 minutes of training per run depending on contention.
+We used no LLM API.
+Software: Python 3.14.2, PyTorch 2.14.1, NumPy 2.5.3, SciPy 1.18.1, pandas 3.0.6, tokenizers 0.23.3.
+
+\para{Deviations from the pre-registered plan.}
+We wrote the plan before training any model and logged the following changes.
+\begin{itemize}[leftmargin=*,itemsep=0pt,topsep=0pt]
+    \item \textbf{Smaller model and budget.} The plan called for 34M parameters, 100M tokens, and context 512. Because the GPUs were shared, we switched to 17M parameters, 60M tokens, and context 256 before starting any analyzed run, and discarded the single pilot run in the old configuration.
+    \item \textbf{Probes fixed on the pilot.} Using only the uniform model and a randomly initialized control, we set $\Kzs$ to \sciq plus \arceasy, added the planned fallback $\Kft$, set $\Rc$ to \listops plus \proofwriter, and excluded arithmetic (random init 76\%, pre-trained 8\% in the pilot).
+    \item \textbf{Extra replicates.} All 63 planned runs finished. We then added 18 seed replicates (every $p=0$ and $p=1$ model, and the code sweep at 0.2 and 0.5). We chose these points before analyzing the full results, but after inspecting 9 runs while debugging the analysis script.
+    \item \textbf{Zero-share mixtures excluded from law fitting.} After seeing that $p=0$ is a cliff that no smooth law fits, we fitted simplex laws on interior mixtures only. We also tried an ``effective-share'' law, which fitted poorly, and dropped it.
+    \item \textbf{Curve-shape criterion.} With nine non-zero points per sweep, the three-parameter models are only loosely identified, so we use leave-one-out error as the primary criterion.
+    \item \textbf{Literature.} The automated resource-gathering stage was skipped, so we assembled the corpora, evaluation data, and literature review in-session.
+\end{itemize}

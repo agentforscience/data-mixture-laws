@@ -1,0 +1,38 @@
+{
+  "web": {
+    "train_docs": 281584,
+    "train_chars": 619995250,
+    "train_tokens_raw": 152947261,
+    "chars_per_token": 4.053653827772699,
+    "val_tokens": 1487912,
+    "example": "Bacon-lovers Rejoice! Bacon Barbecue Cello Cheese Whisps are made from just one wholesome ingredient, 100% cheese, nothing else. Bacon BBQ Cheddar Whisps feature delicious, baked sharp Cello Cheddar cheese and smoky bacon barbecue spices for the perfect by-the-handful snack.\nCello\u2019s rBGH-free cheeses are specially crafted by Cello\u2019s cheesemakers and combined to form the perfect balance of flavor. ",
+    "train_tokens": 128865134
+  },
+  "wiki": {
+    "train_docs": 29281,
+    "train_chars": 538249138,
+    "train_tokens_raw": 128865134,
+    "chars_per_token": 4.176840711623362,
+    "val_tokens": 270358,
+    "example": " = The Operative : No One Lives Forever = \n The Operative : No One Lives Forever is a first @-@ person shooter video game with stealth gameplay elements , developed by Monolith Productions and published by Fox Interactive , released for Microsoft Windows in 2000 . The game was ported later to the PlayStation 2 and Mac OS X. \n A story @-@ driven game set in the 1960s , No One Lives Forever has been",
+    "train_tokens": 128865134
+  },
+  "code": {
+    "train_docs": 77651,
+    "train_chars": 619996105,
+    "train_tokens_raw": 180027583,
+    "chars_per_token": 3.4438950669020536,
+    "val_tokens": 1768922,
+    "example": "r\"\"\"Fixer for unicode.\n\n* Changes unicode to str and unichr to chr.\n\n* If \"...\\u...\" is not unicode literal change it into \"...\\\\u...\".\n\n* Change u\"...\" into \"...\".\n\n\"\"\"\n\nfrom ..pgen2 import token\nfrom .. import fixer_base\n\n_mapping = {\"unichr\" : \"chr\", \"unicode\" : \"str\"}\n\nclass FixUnicode(fixer_base.BaseFix):\n    BM_compatible = True\n    PATTERN = \"STRING | 'unicode' | 'unichr'\"\n\n    def start_tr",
+    "train_tokens": 128865134
+  },
+  "arxiv": {
+    "train_docs": 26573,
+    "train_chars": 620001029,
+    "train_tokens_raw": 146112233,
+    "chars_per_token": 4.243320468588006,
+    "val_tokens": 1420298,
+    "example": "i can see at least four different reasons for which astrophysicists interested in exoplanets should also bother about the asteroseismology of the central stars of planetary systems . first reason : the observations for stellar oscillations and exoplanet searches are done with the same instruments . in some cases , the same observations , analysed on different time scales , can lead to both planet ",
+    "train_tokens": 128865134
+  }
+}

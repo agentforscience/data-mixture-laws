@@ -1,0 +1,18 @@
+{
+  "success": true,
+  "stages": {
+    "resource_finder": {
+      "success": true,
+      "skipped": true
+    },
+    "experiment_runner": {
+      "success": true,
+      "return_code": 0,
+      "elapsed_time": 11274.505740880966,
+      "log_file": "/data/summereunann/neurico-workspaces/data_mixture_laws__predicting__20261009_122942_d0395acb/logs/execution_claude.log",
+      "transcript_file": "/data/summereunann/neurico-workspaces/data_mixture_laws__predicting__20261009_122942_d0395acb/logs/execution_claude_transcript.jsonl",
+      "background_processes_terminated": false
+    }
+  },
+  "work_dir": "/data/summereunann/neurico-workspaces/data_mixture_laws__predicting__20261009_122942_d0395acb"
+}

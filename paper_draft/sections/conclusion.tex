@@ -1,0 +1,17 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We tested four specific claims about how pre-training mixture proportions shape performance, using 81 small language models trained on 53 controlled mixtures of four domains.
+Held-out loss on a domain follows a log-linear law in that domain's share, with no saturation at 20\%, and a law fitted on 29 mixtures predicts loss on unseen mixtures.
+Downstream accuracy does not follow the hypothesized laws.
+It is flat within noise across interior mixtures, code share does not correlate with reasoning scores ($r \approx 0$, not $> 0.7$), and web text above 50\% does not measurably hurt knowledge tasks.
+The one robust downstream effect is that a corpus without natural language is clearly worse on knowledge tasks.
+
+The key takeaway is that, at this scale, a law for loss is not a law for downstream performance.
+
+Several steps follow.
+The sweep design should be repeated at 100--500M parameters and at least 1B tokens, where zero-shot benchmarks carry signal; the coarse grid $\{0, 0.05, 0.2, 0.5, 1\}$ with three seeds was the informative part of our design.
+Future runs should use at least five seeds per point and continuous metrics such as log-likelihood margins, so that 0.5-point effects are detectable.
+Varying the token budget would separate share from the amount of in-domain data and test whether the log-share slopes are budget-invariant.
+The region between 0\% and 2\%, where roughly half of each domain's loss benefit is realized, deserves a finer grid.
+Open questions remain: whether the flatness persists once models can use domain knowledge zero-shot, whether the \listops--code association is a bracket-syntax effect, and why pre-training makes arithmetic harder to learn for some seeds.
